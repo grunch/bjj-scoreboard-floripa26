@@ -9,7 +9,7 @@ import NotFound from "./pages/NotFound";
 
 export function AppRouter() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/bjj-scoreboard-floripa26/">
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<HomeScreen />} />
