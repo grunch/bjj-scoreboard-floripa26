@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pencil, Check, Bug } from 'lucide-react';
+import { Pencil, Check, Bug, Monitor, LayoutList } from 'lucide-react';
 import { MatchEvent, useMatches } from '@/hooks/useMatches';
-import MatchCard from '@/components/MatchCard';
+import MatchCard, { CardMode } from '@/components/MatchCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { nip19 } from 'nostr-tools';
@@ -43,13 +44,13 @@ export default function HomeScreen() {
   const [touched, setTouched] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   const [filter, setFilter] = useState<StatusFilter>('active');
+  const [displayMode, setDisplayMode] = useState<CardMode>('compact');
   const navigate = useNavigate();
 
   const validation = useMemo(() => validatePubkey(inputValue), [inputValue]);
 
   const { data: liveMatches = [], refetch, isFetching } = useMatches(loadedPubkey);
 
-  // Use debug data or live data
   const allMatches: MatchEvent[] = debugMode ? DEBUG_MATCHES : liveMatches;
 
   useEffect(() => {
@@ -79,14 +80,14 @@ export default function HomeScreen() {
   const handleDebugToggle = () => {
     const next = !debugMode;
     setDebugMode(next);
-    if (next) {
-      // Show all filters in debug mode
-      setFilter('active');
-    }
+    if (next) setFilter('active');
+  };
+
+  const toggleDisplayMode = () => {
+    setDisplayMode(prev => prev === 'compact' ? 'broadcast' : 'compact');
   };
 
   const visible = useMemo(() => {
-    // In debug mode, skip the 24h filter
     let list = debugMode
       ? allMatches
       : allMatches.filter(m => (m.created_at ?? 0) >= (Date.now() / 1000 - 24 * 3600));
@@ -97,27 +98,54 @@ export default function HomeScreen() {
   }, [allMatches, filter, debugMode]);
 
   const hasData = debugMode || !!loadedPubkey;
+  const bc = displayMode === 'broadcast';
 
   return (
-    <div className="min-h-screen p-6 bg-background">
-      <div className="max-w-4xl mx-auto">
+    <div className={`min-h-screen bg-background ${bc ? 'p-2 sm:p-4' : 'p-6'}`}>
+      <div className={bc ? 'w-full' : 'max-w-4xl mx-auto'}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 gap-4">
-          <h1 className="text-3xl font-bold text-foreground shrink-0">BJJ Live Scoreboard</h1>
-          <div className="flex items-center gap-2">
+        <div className={`flex items-center justify-between gap-4 ${bc ? 'mb-3' : 'mb-6'}`}>
+          <h1 className={`font-bold text-foreground shrink-0 ${bc ? 'text-xl' : 'text-3xl'}`}>
+            BJJ Live Scoreboard
+          </h1>
+          <div className="flex items-center gap-1.5">
             <ThemeToggle />
 
+            {/* Display mode toggle */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={bc ? 'default' : 'ghost'}
+                  size="icon"
+                  onClick={toggleDisplayMode}
+                  className="h-9 w-9 rounded-full"
+                >
+                  {bc ? <LayoutList className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
+                  <span className="sr-only">{bc ? 'Switch to compact' : 'Switch to broadcast'}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{bc ? 'Compact view' : 'Broadcast view'}</p>
+              </TooltipContent>
+            </Tooltip>
+
             {/* Debug toggle */}
-            <Button
-              variant={debugMode ? 'default' : 'ghost'}
-              size="icon"
-              onClick={handleDebugToggle}
-              className="h-9 w-9 rounded-full"
-              title={debugMode ? 'Exit debug mode' : 'Show demo matches'}
-            >
-              <Bug className="h-4 w-4" />
-              <span className="sr-only">Debug mode</span>
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={debugMode ? 'default' : 'ghost'}
+                  size="icon"
+                  onClick={handleDebugToggle}
+                  className="h-9 w-9 rounded-full"
+                >
+                  <Bug className="h-4 w-4" />
+                  <span className="sr-only">Debug mode</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{debugMode ? 'Exit debug mode' : 'Show demo matches'}</p>
+              </TooltipContent>
+            </Tooltip>
 
             {/* Pubkey input / label */}
             {!debugMode && (
@@ -159,7 +187,7 @@ export default function HomeScreen() {
 
         {/* Debug banner */}
         {debugMode && (
-          <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 flex items-center gap-2">
+          <div className={`rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 flex items-center gap-2 ${bc ? 'mb-2' : 'mb-4'}`}>
             <Bug className="h-4 w-4 text-amber-500 shrink-0" />
             <span className="text-sm text-amber-600 dark:text-amber-400">
               Debug mode — showing 8 hardcoded demo matches across all statuses.
@@ -169,7 +197,7 @@ export default function HomeScreen() {
 
         {/* Status filters */}
         {hasData && (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className={`flex flex-wrap gap-2 ${bc ? 'mb-2' : 'mb-4'}`}>
             {([
               ['active', 'Waiting / In-progress'],
               ['waiting', 'Waiting'],
@@ -203,15 +231,15 @@ export default function HomeScreen() {
             <p>No matches found for this filter. Try a different one.</p>
           </div>
         ) : (
-          <div className="grid gap-4">
+          <div className={`flex flex-col ${bc ? 'gap-3' : 'gap-4'}`}>
             {visible.map(m => (
-              <MatchCard key={m.id} match={m} onOpen={(id) => navigate(`/match/${id}`)} />
+              <MatchCard key={m.id} match={m} onOpen={(id) => navigate(`/match/${id}`)} mode={displayMode} />
             ))}
           </div>
         )}
 
         {/* Footer */}
-        <div className="mt-12 text-center text-xs text-muted-foreground">
+        <div className={`text-center text-xs text-muted-foreground ${bc ? 'mt-4' : 'mt-12'}`}>
           Vibed with{' '}
           <a href="https://shakespeare.diy" className="underline hover:text-foreground transition-colors" target="_blank" rel="noopener noreferrer">
             Shakespeare
