@@ -25,7 +25,7 @@ function getStatusBadge(status: string) {
     case 'finished':
       return <Badge variant="outline" className="gap-1"><Trophy className="h-3 w-3" /> Finished</Badge>;
     case 'canceled':
-      return <Badge variant="destructive" className="gap-1">Canceled</Badge>;
+      return <Badge variant="outline" className="gap-1 border-muted-foreground/40 text-muted-foreground">Canceled</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -97,7 +97,7 @@ export default function MatchCard({ match, onOpen }: { match: MatchEvent; onOpen
               <div className="flex items-center gap-2 mb-2">
                 <div className="h-3 w-3 rounded-full shrink-0 ring-1 ring-border" style={{ backgroundColor: match.f1_color ?? '#121A2E' }} />
                 <span className="text-sm font-semibold text-foreground truncate">{match.f1_name}</span>
-                {f1Winning && <Trophy className="h-3.5 w-3.5 text-amber-500 shrink-0 animate-bounce" style={{ animationDuration: '2s' }} />}
+                {f1Winning && <Trophy className="h-3.5 w-3.5 shrink-0 animate-bounce" style={{ animationDuration: '2s', color: 'hsl(var(--bjj-gold))' }} />}
               </div>
               <div className={`text-3xl font-bold font-mono tracking-tight transition-colors duration-300 ${
                 f1Winning ? 'text-primary' : 'text-foreground'
@@ -133,7 +133,7 @@ export default function MatchCard({ match, onOpen }: { match: MatchEvent; onOpen
               <div className="flex items-center gap-2 mb-2">
                 <div className="h-3 w-3 rounded-full shrink-0 ring-1 ring-border" style={{ backgroundColor: match.f2_color ?? '#FFFFFF' }} />
                 <span className="text-sm font-semibold text-foreground truncate">{match.f2_name}</span>
-                {f2Winning && <Trophy className="h-3.5 w-3.5 text-amber-500 shrink-0 animate-bounce" style={{ animationDuration: '2s' }} />}
+                {f2Winning && <Trophy className="h-3.5 w-3.5 shrink-0 animate-bounce" style={{ animationDuration: '2s', color: 'hsl(var(--bjj-gold))' }} />}
               </div>
               <div className={`text-3xl font-bold font-mono tracking-tight transition-colors duration-300 ${
                 f2Winning ? 'text-primary' : 'text-foreground'
