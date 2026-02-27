@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNostr } from '@nostrify/react';
-import { generatePrivateKey, getPublicKey, signEvent } from 'nostr-tools';
-import { nip19 } from 'nostr-tools';
-import { Pencil, Check, Bug, Monitor, LayoutList } from 'lucide-react';
+import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools';
+import { Pencil, Check, Bug, Monitor, LayoutList, Copy, Loader2 } from 'lucide-react';
 import { MatchEvent, useMatches } from '@/hooks/useMatches';
 import MatchCard, { CardMode } from '@/components/MatchCard';
 import { Input } from '@/components/ui/input';
@@ -58,11 +57,11 @@ export default function HomeScreen() {
 
   const { nostr } = useNostr();
 
-  // Debug publish state
-  const [debugNsec, setDebugNsec] = useState<string | null>(null);
+  // Debug publish state — reusable ephemeral key for session
+  const debugKeyRef = useRef<Uint8Array | null>(null);
   const [debugNpub, setDebugNpub] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
-  const [publishStatus, setPublishStatus] = useState<'idle'|'publishing'|'published'|'failed'>('idle');
+  const [publishStatus, setPublishStatus] = useState<'idle' | 'published' | 'failed'>('idle');
 
   useEffect(() => {
     if (!loadedPubkey || debugMode) return;
@@ -96,6 +95,28 @@ export default function HomeScreen() {
 
   const toggleDisplayMode = () => {
     setDisplayMode(prev => prev === 'compact' ? 'broadcast' : 'compact');
+  };
+
+  const handlePublishDebug = async () => {
+    try {
+      // Reuse key across the session
+      if (!debugKeyRef.current) {
+        debugKeyRef.current = generateSecretKey();
+      }
+      const sk = debugKeyRef.current;
+      setDebugNpub(nip19.npubEncode(getPublicKey(sk)));
+      setPublishing(true);
+      setPublishStatus('idle');
+
+      await publishDebugMatchesToRelays({ matches: DEBUG_MATCHES, nostr, secretKey: sk });
+
+      setPublishing(false);
+      setPublishStatus('published');
+    } catch (err) {
+      console.error('Debug publish failed:', err);
+      setPublishing(false);
+      setPublishStatus('failed');
+    }
   };
 
   const visible = useMemo(() => {
@@ -198,55 +219,52 @@ export default function HomeScreen() {
 
         {/* Debug banner */}
         {debugMode && (
-          <div className={`rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 flex items-center gap-2 ${bc ? 'mb-2' : 'mb-4'}`}>
-            <Bug className="h-4 w-4 text-amber-500 shrink-0" />
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-amber-600 dark:text-amber-400">Debug mode — showing 8 hardcoded demo matches across all statuses.</span>
+          <div className={`rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 space-y-2 ${bc ? 'mb-2' : 'mb-4'}`}>
+            <div className="flex items-center gap-2">
+              <Bug className="h-4 w-4 text-amber-500 shrink-0" />
+              <span className="text-sm text-amber-600 dark:text-amber-400 flex-1">
+                Debug mode — showing 8 hardcoded demo matches.
+              </span>
 
-              {/* Publish debug matches button */}
               <Button
                 size="sm"
                 variant="default"
-                onClick={async () => {
-                  try {
-                    // reuse keypair for session
-                    if (!debugNsec) {
-                      const k = generatePrivateKey();
-                      setDebugNsec(k);
-                      setDebugNpub(nip19.npubEncode(getPublicKey(k)));
-                    }
-
-                    setPublishing(true);
-                    const pk = debugNsec ?? generatePrivateKey();
-                    const relays = ['wss://nos.lol', 'wss://relay.mostro.network'];
-                    // publish
-                    const npub = await publishDebugMatchesToRelays({ matches: DEBUG_MATCHES, nostr, privateKey: pk, relays });
-                    setDebugNpub(npub);
-                    setPublishing(false);
-                    setPublishStatus('published');
-                  } catch (err) {
-                    console.error(err);
-                    setPublishing(false);
-                    setPublishStatus('failed');
-                  }
-                }}
+                onClick={handlePublishDebug}
+                disabled={publishing}
               >
-                Publish to Nostr
+                {publishing ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Publishing...</>
+                ) : publishStatus === 'published' ? (
+                  'Publish again'
+                ) : (
+                  'Publish to Nostr'
+                )}
               </Button>
-
-              {/* Show npub after publish */}
-              {debugNpub && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono truncate max-w-[200px]" title={debugNpub}>{debugNpub}</span>
-                  <Button size="icon" variant="ghost" onClick={() => { navigator.clipboard.writeText(debugNpub); }}>
-                    Copy
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => { setInputValue(debugNpub); setIsEditing(true); }}>
-                    Load into field
-                  </Button>
-                </div>
-              )}
             </div>
+
+            {/* Published npub display */}
+            {debugNpub && (
+              <div className="flex items-center gap-2 pl-6">
+                {publishStatus === 'published' && (
+                  <span className="text-xs text-green-600 dark:text-green-400 shrink-0">Published!</span>
+                )}
+                {publishStatus === 'failed' && (
+                  <span className="text-xs text-destructive shrink-0">Failed — check console</span>
+                )}
+                <code className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded truncate max-w-[300px]" title={debugNpub}>
+                  {debugNpub}
+                </code>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7"
+                  onClick={() => navigator.clipboard.writeText(debugNpub)}
+                  title="Copy npub"
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
           </div>
         )}
 

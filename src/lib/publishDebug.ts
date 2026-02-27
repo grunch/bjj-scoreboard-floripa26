@@ -1,7 +1,14 @@
-import { nip19, getPublicKey, signEvent } from 'nostr-tools';
+import { getPublicKey, finalizeEvent, nip19 } from 'nostr-tools';
+import { MatchEvent } from '@/hooks/useMatches';
 
-export async function publishDebugMatchesToRelays({matches, nostr, privateKey, relays}: {matches:any[], nostr:any, privateKey:string, relays:string[]}) {
-  const npub = nip19.npubEncode(getPublicKey(privateKey));
+const PUBLISH_RELAYS = ['wss://nos.lol', 'wss://relay.damus.io'];
+
+export async function publishDebugMatchesToRelays(
+  { matches, nostr, secretKey }: { matches: MatchEvent[]; nostr: any; secretKey: Uint8Array }
+): Promise<string> {
+  const pubkey = getPublicKey(secretKey);
+  const npub = nip19.npubEncode(pubkey);
+  const now = Math.floor(Date.now() / 1000);
 
   for (const m of matches) {
     const content = JSON.stringify({
@@ -20,25 +27,26 @@ export async function publishDebugMatchesToRelays({matches, nostr, privateKey, r
       f1_pen: m.f1_pen, f2_pen: m.f2_pen,
     });
 
-    const tags = [['d', m.id], ['expiration', String(Math.floor(Date.now()/1000) + 7*24*3600)]];
+    const tags = [
+      ['d', m.id],
+      ['expiration', String(now + 7 * 24 * 3600)],
+    ];
 
-    const event: any = {
+    // finalizeEvent computes id, pubkey, and sig
+    const signed = finalizeEvent({
       kind: 31925,
       content,
       tags,
-      created_at: Math.floor(Date.now() / 1000),
-      pubkey: getPublicKey(privateKey),
-    };
+      created_at: now,
+    }, secretKey);
 
-    const sig = await signEvent(event, privateKey);
-    const signed = { ...event, sig };
-
-    for (const url of relays) {
+    // Publish to each relay directly
+    for (const url of PUBLISH_RELAYS) {
       try {
         const relay = nostr.relay(url);
-        await relay.event(signed);
+        await relay.event(signed, { signal: AbortSignal.timeout(5000) });
       } catch (e) {
-        console.warn('Relay publish failed', url, e);
+        console.warn(`Relay publish failed for ${url}:`, e);
       }
     }
   }
