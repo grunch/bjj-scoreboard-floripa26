@@ -1,24 +1,52 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pencil } from 'lucide-react';
+import { Pencil, Check } from 'lucide-react';
 import { useMatches } from '@/hooks/useMatches';
 import MatchCard from '@/components/MatchCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { nip19 } from 'nostr-tools';
 
 function truncateNpub(value: string) {
   if (value.length <= 20) return value;
   return `${value.slice(0, 10)}...${value.slice(-6)}`;
 }
 
+function validatePubkey(value: string) {
+  const v = value.trim();
+  if (!v) return { valid: false, error: 'Enter an npub or 64-char hex pubkey' };
+
+  // try nip19 decode
+  try {
+    const decoded = nip19.decode(v);
+    if (decoded?.type === 'npub' && typeof decoded.data === 'string' && /^[0-9a-fA-F]{64}$/.test(decoded.data)) {
+      return { valid: true, type: 'npub', hex: decoded.data };
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  // check hex
+  if (/^[0-9a-fA-F]{64}$/.test(v)) {
+    return { valid: true, type: 'hex', hex: v };
+  }
+
+  return { valid: false, error: 'Invalid npub or hex pubkey' };
+}
+
 export default function HomeScreen() {
   const [inputValue, setInputValue] = useState('');
   const [loadedPubkey, setLoadedPubkey] = useState('');
   const [isEditing, setIsEditing] = useState(true);
+  const [touched, setTouched] = useState(false);
+  const navigate = useNavigate();
+
+  const validation = useMemo(() => validatePubkey(inputValue), [inputValue]);
+  const isValid = !!(validation && (validation as any).valid);
+
   const { data: matches = [], refetch, isFetching } = useMatches(loadedPubkey);
   const [filter, setFilter] = useState<'waiting' | 'in-progress' | 'finished' | 'canceled' | 'active'>('active');
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!loadedPubkey) return;
@@ -27,13 +55,19 @@ export default function HomeScreen() {
   }, [refetch, loadedPubkey]);
 
   const handleLoad = () => {
-    if (!inputValue.trim()) return;
+    setTouched(true);
+    if (!isValid) return;
+    // normalize to hex for storage if needed; use original input for display
+    const hex = (validation as any).hex ?? inputValue.trim();
+    // keep display as provided (npub or hex)
     setLoadedPubkey(inputValue.trim());
     setIsEditing(false);
   };
 
   const handleEdit = () => {
+    setInputValue(loadedPubkey);
     setIsEditing(true);
+    setTouched(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -56,19 +90,29 @@ export default function HomeScreen() {
           <h1 className="text-3xl font-bold text-foreground">BJJ Live Scoreboard</h1>
           <div className="flex items-center gap-2">
             <ThemeToggle />
+
             {isEditing ? (
-              <>
-                <Input
-                  value={inputValue}
-                  onChange={e => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Enter npub or hex pubkey"
-                  className="w-64"
-                />
-                <Button onClick={handleLoad} disabled={!inputValue.trim()}>Load</Button>
-              </>
+              <div className="flex items-start gap-2">
+                <div>
+                  <Input
+                    value={inputValue}
+                    onChange={e => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Enter npub or hex pubkey"
+                    className="w-64"
+                    onBlur={() => setTouched(true)}
+                  />
+                  {touched && !isValid && (
+                    <div className="text-sm text-destructive mt-1">{(validation as any).error}</div>
+                  )}
+                </div>
+
+                <Button onClick={handleLoad} disabled={!isValid} title={!isValid ? 'Enter a valid npub or hex' : 'Load matches'}>
+                  {isValid ? <Check className="h-4 w-4" /> : 'Load'}
+                </Button>
+              </div>
             ) : (
-              <>
+              <div className="flex items-center gap-2">
                 <span className="text-sm font-mono text-muted-foreground truncate max-w-[200px]" title={loadedPubkey}>
                   {truncateNpub(loadedPubkey)}
                 </span>
@@ -76,7 +120,7 @@ export default function HomeScreen() {
                   <Pencil className="h-3.5 w-3.5" />
                   <span className="sr-only">Change pubkey</span>
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>
