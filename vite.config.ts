@@ -5,6 +5,10 @@ import { defineConfig } from "vitest/config";
 
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
+
+
+  base: '/bjj-scoreboard-floripa26/',
+
   server: {
     host: "::",
     port: 8080,
