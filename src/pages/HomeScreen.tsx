@@ -51,7 +51,7 @@ export default function HomeScreen() {
 
   const validation = useMemo(() => validatePubkey(inputValue), [inputValue]);
 
-  const { data: liveMatches = [], refetch, isFetching } = useMatches(loadedPubkey);
+  const { data: liveMatches = [], isLoading } = useMatches(loadedPubkey);
 
   const allMatches: MatchEvent[] = debugMode ? DEBUG_MATCHES : liveMatches;
 
@@ -63,11 +63,7 @@ export default function HomeScreen() {
   const [publishing, setPublishing] = useState(false);
   const [publishStatus, setPublishStatus] = useState<'idle' | 'published' | 'failed'>('idle');
 
-  useEffect(() => {
-    if (!loadedPubkey || debugMode) return;
-    const id = setInterval(() => refetch(), 3000);
-    return () => clearInterval(id);
-  }, [refetch, loadedPubkey, debugMode]);
+  // Live subscription is managed by useMatches — no polling needed.
 
   const handleLoad = () => {
     setTouched(true);
@@ -290,7 +286,7 @@ export default function HomeScreen() {
           </div>
         )}
 
-        {!debugMode && isFetching && <div className="text-sm text-muted-foreground mb-2">Refreshing...</div>}
+        {!debugMode && isLoading && <div className="text-sm text-muted-foreground mb-2">Connecting…</div>}
 
         {/* Content */}
         {!hasData ? (
