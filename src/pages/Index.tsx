@@ -1,13 +1,10 @@
 import { useSeoMeta } from '@unhead/react';
-
-// FIXME: Update this page (the content is just a fallback if you fail to update the page)
-
 import HomeScreen from './HomeScreen';
 
 const Index = () => {
   useSeoMeta({
-    title: 'Welcome to Your Blank App',
-    description: 'A modern Nostr client application built with React, TailwindCSS, and Nostrify.',
+    title: 'BJJ Live Scoreboard',
+    description: 'A modern decentralized BJJ match scoreboard powered by Nostr. Watch live match scores in real time.',
   });
 
   return <HomeScreen />;

@@ -32,7 +32,7 @@ const queryClient = new QueryClient({
 });
 
 const defaultConfig: AppConfig = {
-  theme: "dark",
+  theme: "light",
   relayMetadata: {
     relays: [
       { url: 'wss://relay.mostro.network', read: true, write: false },
