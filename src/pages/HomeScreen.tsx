@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { DEBUG_MATCHES } from '@/lib/debugMatches';
+import { publishDebugMatchesToRelays } from '@/lib/publishDebug';
 
 function truncateNpub(value: string) {
   if (value.length <= 20) return value;
