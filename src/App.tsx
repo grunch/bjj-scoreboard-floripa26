@@ -32,12 +32,12 @@ const queryClient = new QueryClient({
 });
 
 const defaultConfig: AppConfig = {
-  theme: "light",
+  theme: "dark",
   relayMetadata: {
     relays: [
-      { url: 'wss://relay.ditto.pub', read: true, write: true },
-      { url: 'wss://relay.primal.net', read: true, write: true },
-      { url: 'wss://relay.damus.io', read: true, write: true },
+      { url: 'wss://relay.mostro.network', read: true, write: false },
+      { url: 'wss://nos.lol', read: true, write: false },
+      { url: 'wss://relay.damus.io', read: true, write: false },
     ],
     updatedAt: 0,
   },
