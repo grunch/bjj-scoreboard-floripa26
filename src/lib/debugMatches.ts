@@ -30,7 +30,7 @@ export const DEBUG_MATCHES: MatchEvent[] = [
     f1_name: 'Marcelo Garcia',
     f2_name: 'Andre Galvao',
     f1_color: '#0D47A1',
-    f2_color: '#B71C1C',
+    f2_color: '#F5B800',
     f1_pt2: 1, f2_pt2: 1,
     f1_pt3: 0, f2_pt3: 1,
     f1_pt4: 0, f2_pt4: 0,
