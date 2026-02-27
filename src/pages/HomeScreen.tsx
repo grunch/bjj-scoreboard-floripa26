@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNostr } from '@nostrify/react';
+import { generatePrivateKey, getPublicKey, signEvent } from 'nostr-tools';
+import { nip19 } from 'nostr-tools';
 import { Pencil, Check, Bug, Monitor, LayoutList } from 'lucide-react';
 import { MatchEvent, useMatches } from '@/hooks/useMatches';
 import MatchCard, { CardMode } from '@/components/MatchCard';
@@ -7,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { nip19 } from 'nostr-tools';
 import { DEBUG_MATCHES } from '@/lib/debugMatches';
 
 function truncateNpub(value: string) {
@@ -52,6 +54,14 @@ export default function HomeScreen() {
   const { data: liveMatches = [], refetch, isFetching } = useMatches(loadedPubkey);
 
   const allMatches: MatchEvent[] = debugMode ? DEBUG_MATCHES : liveMatches;
+
+  const { nostr } = useNostr();
+
+  // Debug publish state
+  const [debugNsec, setDebugNsec] = useState<string | null>(null);
+  const [debugNpub, setDebugNpub] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
+  const [publishStatus, setPublishStatus] = useState<'idle'|'publishing'|'published'|'failed'>('idle');
 
   useEffect(() => {
     if (!loadedPubkey || debugMode) return;
@@ -189,9 +199,53 @@ export default function HomeScreen() {
         {debugMode && (
           <div className={`rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 flex items-center gap-2 ${bc ? 'mb-2' : 'mb-4'}`}>
             <Bug className="h-4 w-4 text-amber-500 shrink-0" />
-            <span className="text-sm text-amber-600 dark:text-amber-400">
-              Debug mode — showing 8 hardcoded demo matches across all statuses.
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-amber-600 dark:text-amber-400">Debug mode — showing 8 hardcoded demo matches across all statuses.</span>
+
+              {/* Publish debug matches button */}
+              <Button
+                size="sm"
+                variant="default"
+                onClick={async () => {
+                  try {
+                    // reuse keypair for session
+                    if (!debugNsec) {
+                      const k = generatePrivateKey();
+                      setDebugNsec(k);
+                      setDebugNpub(nip19.npubEncode(getPublicKey(k)));
+                    }
+
+                    setPublishing(true);
+                    const pk = debugNsec ?? generatePrivateKey();
+                    const relays = ['wss://nos.lol', 'wss://relay.mostro.network'];
+                    // publish
+                    const npub = await publishDebugMatchesToRelays({ matches: DEBUG_MATCHES, nostr, privateKey: pk, relays });
+                    setDebugNpub(npub);
+                    setPublishing(false);
+                    setPublishStatus('published');
+                  } catch (err) {
+                    console.error(err);
+                    setPublishing(false);
+                    setPublishStatus('failed');
+                  }
+                }}
+              >
+                Publish to Nostr
+              </Button>
+
+              {/* Show npub after publish */}
+              {debugNpub && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono truncate max-w-[200px]" title={debugNpub}>{debugNpub}</span>
+                  <Button size="icon" variant="ghost" onClick={() => { navigator.clipboard.writeText(debugNpub); }}>
+                    Copy
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setInputValue(debugNpub); setIsEditing(true); }}>
+                    Load into field
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
