@@ -34,7 +34,7 @@ export async function publishDebugMatchesToRelays(
 
     // finalizeEvent computes id, pubkey, and sig
     const signed = finalizeEvent({
-      kind: 31925,
+      kind: 31415,
       content,
       tags,
       created_at: now,

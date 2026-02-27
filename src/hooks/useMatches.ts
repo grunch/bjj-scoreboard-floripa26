@@ -26,7 +26,7 @@ export type MatchEvent = {
   raw?: any;
 };
 
-const KIND = 31925;
+const KIND = 31415;
 
 function parsePubkey(value?: string) {
   if (!value) return undefined;
