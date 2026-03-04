@@ -5,8 +5,7 @@
 | Path | Page Component | Description |
 |------|---------------|-------------|
 | `/` | `Index` → `HomeScreen` | Main scoreboard landing page |
-| `/match/:matchId` | `MatchDetail` | Individual match detail view |
-| `/messages` | `Messages` | Direct messaging interface |
+| `/match/:id` | `MatchDetail` | Individual match detail view |
 | `/:nip19` | `NIP19Page` | NIP-19 entity decoder (placeholder) |
 | `*` | `NotFound` | 404 page |
 
@@ -17,7 +16,7 @@
 
 ### Layout
 
-```
+```text
 ┌──────────────────────────────────────────────────────┐
 │  🥋 BJJ Floripa 2026                    [🌙] [Login] │
 │                                                      │
@@ -69,7 +68,7 @@ Designed for TV/projector display:
 ### User Interactions
 
 - Enter pubkey → Load matches
-- Click match card → Navigate to `/match/:matchId`
+- Click match card → Navigate to `/match/:id`
 - Toggle view mode → Switches card rendering
 - Toggle theme → Dark/light mode
 - Login → Opens login dialog
@@ -77,7 +76,7 @@ Designed for TV/projector display:
 ## 2. Match Detail
 
 **File:** `src/pages/MatchDetail.tsx`
-**Route:** `/match/:matchId`
+**Route:** `/match/:id`
 
 ### Features
 
@@ -86,21 +85,7 @@ Designed for TV/projector display:
 - Real-time updates continue via subscription
 - Back navigation to home screen
 
-## 3. Messages
-
-**File:** `src/pages/Messages.tsx`
-**Route:** `/messages`
-
-### Features
-
-- Direct messaging interface
-- Supports NIP-04 and NIP-17 encrypted messages
-- Conversation list with last message preview
-- Message thread view with pagination
-- File attachment support via Blossom upload
-- Requires login
-
-## 4. NIP-19 Entity Page
+## 3. NIP-19 Entity Page
 
 **File:** `src/pages/NIP19Page.tsx`
 **Route:** `/:nip19`
@@ -110,7 +95,7 @@ Designed for TV/projector display:
 - Decodes NIP-19 entities (npub, note, nevent, naddr)
 - Currently a placeholder/minimal implementation
 
-## 5. Not Found (404)
+## 4. Not Found (404)
 
 **File:** `src/pages/NotFound.tsx`
 **Route:** `*` (catch-all)

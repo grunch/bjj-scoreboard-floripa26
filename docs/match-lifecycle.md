@@ -2,7 +2,7 @@
 
 ## Complete Lifecycle Diagram
 
-```
+```text
 ┌──────────┐     Organizer sets    ┌─────────────┐     Organizer sets    ┌──────────┐
 │          │     status:           │             │     status:           │          │
 │ WAITING  │────"in-progress"─────▶│ IN-PROGRESS │────"finished"────────▶│ FINISHED │

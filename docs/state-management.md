@@ -4,7 +4,7 @@
 
 The app uses a layered state management approach:
 
-```
+```text
 ┌─────────────────────────────────────────────┐
 │         React Query (TanStack)              │
 │  Server state: Nostr events, profiles,      │
@@ -61,7 +61,7 @@ Used for all Nostr data fetching:
 ### AppContext
 
 **Provider:** `AppProvider`
-**Storage:** localStorage key `bjj-floripa26-config`
+**Storage:** localStorage key `nostr:app-config`
 
 ```typescript
 interface AppConfig {
@@ -83,7 +83,7 @@ interface AppConfig {
 ### NostrLoginContext
 
 **Provider:** `NostrLoginProvider` (from `@nostrify/react/login`)
-**Storage:** localStorage key `nostr-login-floripa26-bjj`
+**Storage:** localStorage key `nostr:login`
 
 **Access:** `useNostrLogin()` → `{ logins, addLogin, removeLogin }`
 
@@ -137,8 +137,8 @@ export function useMatches(pubkey?: string) {
 
 | Key | Content | Hook |
 |-----|---------|------|
-| `bjj-floripa26-config` | AppConfig (theme, relays) | `useLocalStorage` via `AppProvider` |
-| `nostr-login-floripa26-bjj` | Login credentials | `@nostrify/react/login` |
+| `nostr:app-config` | AppConfig (theme, relays) | `useLocalStorage` via `AppProvider` |
+| `nostr:login` | Login credentials | `@nostrify/react/login` |
 | `nwc-connections` | NWC connection strings | `useNWC` |
 | `nwc-active-connection` | Active NWC connection string | `useNWC` |
 
@@ -206,7 +206,7 @@ Used for ephemeral UI state that doesn't need persistence:
 
 ## Data Flow Summary
 
-```
+```text
 User types pubkey ──▶ HomeScreen state
                           │
                           ▼

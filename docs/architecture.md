@@ -23,7 +23,7 @@
 
 ## Project Structure
 
-```
+```text
 bjj-scoreboard-floripa26/
 ├── index.html                    # Entry HTML (CSP headers, root mount)
 ├── package.json                  # Dependencies and scripts
@@ -109,7 +109,7 @@ bjj-scoreboard-floripa26/
 
 ### Scoreboard Data Flow (Read-Only for Spectators)
 
-```
+```text
                                   ┌─────────────────┐
                                   │ Tournament       │
                                   │ Organizer App    │
@@ -151,7 +151,7 @@ bjj-scoreboard-floripa26/
 
 ### Provider Stack (Component Tree)
 
-```
+```text
 <React.StrictMode>
   <QueryClientProvider>          ← TanStack React Query
     <AppProvider>                ← Theme + relay metadata (localStorage)

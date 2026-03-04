@@ -10,7 +10,7 @@ Authentication in the BJJ Scoreboard uses the **Nostr protocol** identity system
 
 ## Login Flow
 
-```
+```text
 ┌─────────────┐    ┌──────────────┐    ┌───────────────────┐
 │ LoginArea   │───▶│ LoginDialog  │───▶│ useLoginActions    │
 │ (not logged)│    │ (3 tabs)     │    │ .extension()       │

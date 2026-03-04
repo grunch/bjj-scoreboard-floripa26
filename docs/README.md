@@ -24,7 +24,7 @@ BJJ Live Scoreboard is a **decentralized, real-time Brazilian Jiu-Jitsu match sc
 
 ### Architecture Summary
 
-```
+```text
 ┌─────────────────────────────────────────────────┐
 │                   React SPA                      │
 │  (Vite + React 18 + TypeScript + TailwindCSS)   │

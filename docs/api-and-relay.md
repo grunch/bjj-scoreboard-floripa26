@@ -59,7 +59,7 @@ const pool = new NPool({
   
   // Route subscription requests to read relays
   reqRouter(filters: NostrFilter[]) {
-    const readRelays = relayMetadata.relays.filter(r => r.read);
+    const readRelays = relayMetadata.current.relays.filter(r => r.read);
     const routes = new Map();
     for (const url of readRelays.map(r => r.url)) {
       routes.set(url, filters);
@@ -69,7 +69,7 @@ const pool = new NPool({
   
   // Route published events to write relays
   eventRouter(_event: NostrEvent) {
-    return relayMetadata.relays.filter(r => r.write).map(r => r.url);
+    return relayMetadata.current.relays.filter(r => r.write).map(r => r.url);
   },
   
   // Wait 200ms for EOSE before considering subscription loaded
