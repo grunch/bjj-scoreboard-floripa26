@@ -7,7 +7,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig(() => ({
 
 
-  base: '/bjj-scoreboard-floripa26/',
+  base: './',
 
   server: {
     host: "::",
