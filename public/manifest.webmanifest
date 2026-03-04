@@ -1,0 +1,16 @@
+{
+  "name": "BJJ Scoreboard",
+  "short_name": "BJJ Score",
+  "description": "Real-time Brazilian Jiu-Jitsu scoring app",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121A2E",
+  "theme_color": "#1BA34E",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
